@@ -1,0 +1,8 @@
+{
+  "name": "Copy 3 -JamTalk",
+  "description": "Learn Jamaican Patois with a real-time AI conversational partner and interactive lessons.",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation"
+  ]
+}
