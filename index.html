@@ -11,6 +11,8 @@
       body {
         font-family: 'Inter', sans-serif;
         background-color: #f0fdf4; /* Light green tint */
+        margin: 0;
+        padding: 0;
       }
       /* Custom scrollbar for chat */
       .scrollbar-hide::-webkit-scrollbar {
@@ -21,6 +23,10 @@
           scrollbar-width: none;
       }
     </style>
+    <!-- Polyfill process.env for the browser -->
+    <script>
+      window.process = window.process || { env: {} };
+    </script>
     <!-- Load Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- Load html2canvas globally to avoid ESM dependency issues -->
@@ -39,6 +45,8 @@
   }
 }
 </script>
+<!-- Entry point for the application -->
+<script type="module" src="index.tsx"></script>
 </head>
   <body>
     <div id="root"></div>

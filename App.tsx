@@ -1,18 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
-import { Navigation } from './components/Navigation';
-import { LessonsView } from './components/LessonsView';
-import { ChatInterface } from './components/ChatInterface';
-import { LiveSession } from './components/LiveSession';
-import { TranslatorView } from './components/TranslatorView';
-import { MusicLyricsView } from './components/MusicLyricsView';
-import { PronunciationCoachView } from './components/PronunciationCoachView';
-import { ProfileView } from './components/ProfileView';
-import { AuthScreen } from './components/AuthScreen';
-import { AppMode, Lesson, User } from './types';
+import { Navigation } from './components/Navigation.tsx';
+import { LessonsView } from './components/LessonsView.tsx';
+import { ChatInterface } from './components/ChatInterface.tsx';
+import { LiveSession } from './components/LiveSession.tsx';
+import { TranslatorView } from './components/TranslatorView.tsx';
+import { MusicLyricsView } from './components/MusicLyricsView.tsx';
+import { PronunciationCoachView } from './components/PronunciationCoachView.tsx';
+import { ProfileView } from './components/ProfileView.tsx';
+import { AuthScreen } from './components/AuthScreen.tsx';
+import { AppMode, Lesson, User } from './types.ts';
 import { Settings, X, Volume2, Check, Loader2, Lock, ShieldCheck, KeyRound } from 'lucide-react';
-import { AVAILABLE_VOICES, INITIAL_LESSONS } from './constants';
-import { storage } from './services/storage';
+import { AVAILABLE_VOICES, INITIAL_LESSONS } from './constants.ts';
+import { storage } from './services/storage.ts';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
