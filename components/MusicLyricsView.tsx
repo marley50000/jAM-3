@@ -136,7 +136,7 @@ export const MusicLyricsView: React.FC = () => {
         }
       });
 
-      const data = JSON.parse(signatureResponse.text);
+      const data = JSON.parse(signatureResponse.text || '{}');
       const signature = data.signature || "Unknown Sonic DNA";
       const snippet = data.snippet || "Instrumental profile";
       const query = data.query || "Jamaican song identification";
@@ -167,7 +167,7 @@ export const MusicLyricsView: React.FC = () => {
 
       setAnalysisStage('authenticating');
       await new Promise(r => setTimeout(r, 600));
-      setLyricsResult(groundedResponse.text);
+      setLyricsResult(groundedResponse.text || "Match found but couldn't load details.");
 
     } catch (error) {
       console.error("Deep ID Error:", error);
@@ -188,7 +188,7 @@ export const MusicLyricsView: React.FC = () => {
         contents: `Provide official Jamaican Patois lyrics, English meaning, and context for: "${searchQuery}". Use Google Search.`,
         config: { tools: [{ googleSearch: {} }] }
       });
-      setLyricsResult(response.text);
+      setLyricsResult(response.text || "Could not find lyrics.");
     } catch (error) {
       setLyricsResult("Cho! JamTalk couldn't find dem records. Try search for di artist directly.");
     } finally {

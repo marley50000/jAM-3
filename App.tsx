@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navigation } from './components/Navigation';
 import { LessonsView } from './components/LessonsView';
@@ -121,7 +120,7 @@ function App() {
     );
   }
 
-  if (isInitializing && vaultState !== 'locked') {
+  if (isInitializing) {
     return (
       <div className="min-h-screen bg-[#052e16] flex flex-col items-center justify-center text-white">
         <Loader2 className="animate-spin text-green-500 mb-4" size={48} />

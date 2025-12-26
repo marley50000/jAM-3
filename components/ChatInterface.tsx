@@ -1,15 +1,10 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Loader2, Volume2, StopCircle, VolumeX, Trash2, Heart, Mic, MicOff, Menu, Plus, X, MessageSquare, Calendar, ThumbsUp, ThumbsDown, Info } from 'lucide-react';
+import { Send, Loader2, Menu, Plus, X, MessageSquare, ThumbsUp, ThumbsDown, Info, Trash2 } from 'lucide-react';
 import { Message } from '../types';
 import { ai } from '../services/gemini';
 import { telemetry } from '../services/telemetry';
 import { SYSTEM_INSTRUCTION, EMPATHY_INSTRUCTION } from '../constants';
-import { base64ToUint8Array, decodeAudioData } from '../utils/audio';
 import ReactMarkdown from 'react-markdown';
-import { Modality } from '@google/genai';
-
-const SESSIONS_KEY = 'jamtalk_chat_sessions';
 
 interface ChatSession {
   id: string;
@@ -121,15 +116,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVoice, onO
       });
 
       const result = await chat.sendMessage({ message: currentInput });
-      const botMsg: Message = { id: (Date.now() + 1).toString(), role: 'model', text: result.text, timestamp: new Date() };
+      const responseText = result.text || '';
+      const botMsg: Message = { id: (Date.now() + 1).toString(), role: 'model', text: responseText, timestamp: new Date() };
       setMessages(prev => [...prev, botMsg]);
 
-      // TELEMETRY: Log the interaction for developer insights
       telemetry.logEvent({
         type: 'query',
         payload: { 
           userQuery: currentInput,
-          aiResponse: result.text,
+          aiResponse: responseText,
           messageCount: updatedMessages.length
         },
         timestamp: Date.now()
@@ -137,11 +132,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVoice, onO
 
     } catch (error) {
       console.error(error);
-      telemetry.logEvent({
-        type: 'error',
-        payload: { error: error instanceof Error ? error.message : 'Unknown chat error' },
-        timestamp: Date.now()
-      });
     } finally {
       setIsLoading(false);
     }
@@ -149,20 +139,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVoice, onO
 
   const handleFeedback = (messageId: string, isPositive: boolean) => {
     if (feedbackGiven.has(messageId)) return;
-    
     setFeedbackGiven(prev => new Set(prev).add(messageId));
-    const msg = messages.find(m => m.id === messageId);
-    
-    // TELEMETRY: Send explicit feedback to developer
-    telemetry.logEvent({
-      type: 'feedback',
-      payload: { 
-        isPositive, 
-        messageText: msg?.text,
-        previousUserMessage: messages[messages.indexOf(msg!) - 1]?.text 
-      },
-      timestamp: Date.now()
-    });
   };
 
   return (
@@ -180,28 +157,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVoice, onO
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] rounded-2xl p-4 shadow-sm relative group animate-in slide-in-from-bottom-2 ${msg.role === 'user' ? 'bg-green-600 text-white rounded-tr-none' : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none'}`}>
               <div className="leading-relaxed text-sm prose prose-sm prose-green"><ReactMarkdown>{msg.text}</ReactMarkdown></div>
-              
               {msg.role === 'model' && (
                 <div className="mt-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity pt-2 border-t border-gray-50">
                     <div className="flex gap-2">
-                        <button 
-                            onClick={() => handleFeedback(msg.id, true)} 
-                            className={`p-1.5 rounded-lg transition-colors ${feedbackGiven.has(msg.id) ? 'text-green-500 bg-green-50' : 'text-gray-400 hover:bg-gray-100'}`}
-                            title="Helpful"
-                        >
-                            <ThumbsUp size={14} />
-                        </button>
-                        <button 
-                            onClick={() => handleFeedback(msg.id, false)} 
-                            className={`p-1.5 rounded-lg transition-colors ${feedbackGiven.has(msg.id) ? 'text-red-400 bg-red-50' : 'text-gray-400 hover:bg-gray-100'}`}
-                            title="Not helpful"
-                        >
-                            <ThumbsDown size={14} />
-                        </button>
+                        <button onClick={() => handleFeedback(msg.id, true)} className={`p-1.5 rounded-lg transition-colors ${feedbackGiven.has(msg.id) ? 'text-green-500 bg-green-50' : 'text-gray-400 hover:bg-gray-100'}`}><ThumbsUp size={14} /></button>
+                        <button onClick={() => handleFeedback(msg.id, false)} className={`p-1.5 rounded-lg transition-colors ${feedbackGiven.has(msg.id) ? 'text-red-400 bg-red-50' : 'text-gray-400 hover:bg-gray-100'}`}><ThumbsDown size={14} /></button>
                     </div>
-                    <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-gray-300">
-                        <Info size={10} /> Improving AI
-                    </div>
+                    <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-gray-300"><Info size={10} /> Improving AI</div>
                 </div>
               )}
             </div>
@@ -218,36 +180,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVoice, onO
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="px-4 py-3 bg-white border-t border-gray-100 shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
-        <div className="bg-gray-50 p-2 rounded-2xl flex items-center gap-2 border border-gray-200 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-100 transition-all">
-          <input 
-            type="text" 
-            value={inputText} 
-            onChange={(e) => setInputText(e.target.value)} 
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} 
-            placeholder="Type in English or Patois..." 
-            className="flex-1 bg-transparent outline-none text-sm px-3 py-1 font-medium text-gray-700" 
-            disabled={isLoading} 
-          />
-          <button 
-            onClick={handleSendMessage} 
-            disabled={!inputText.trim() || isLoading} 
-            className="p-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 shadow-md shadow-green-950/10 transition-all active:scale-95"
-          >
-            <Send size={18} />
-          </button>
+      <div className="px-4 py-3 bg-white border-t border-gray-100">
+        <div className="bg-gray-50 p-2 rounded-2xl flex items-center gap-2 border border-gray-200 focus-within:border-green-500 transition-all">
+          <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} placeholder="Type in English or Patois..." className="flex-1 bg-transparent outline-none text-sm px-3 py-1 font-medium text-gray-700" disabled={isLoading} />
+          <button onClick={handleSendMessage} disabled={!inputText.trim() || isLoading} className="p-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 shadow-md transition-all active:scale-95"><Send size={18} /></button>
         </div>
       </div>
 
-      <ChatSidebar 
-        isOpen={isSidebarOpen} 
-        onClose={() => setIsSidebarOpen(false)} 
-        sessions={sessions} 
-        onSelectSession={(s) => setCurrentSessionId(s.id)} 
-        onDeleteSession={() => {}} 
-        onNewChat={() => {}} 
-        currentSessionId={currentSessionId} 
-      />
+      <ChatSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} sessions={sessions} onSelectSession={(s) => setCurrentSessionId(s.id)} onDeleteSession={() => {}} onNewChat={() => {}} currentSessionId={currentSessionId} />
     </div>
   );
 };
