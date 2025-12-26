@@ -1,4 +1,3 @@
-
 /**
  * JamTalk Secure Storage Service
  * Implements Zero-Knowledge AES-GCM 256-bit encryption.
@@ -42,10 +41,10 @@ export class StorageService {
     this.masterKey = await window.crypto.subtle.deriveKey(
       {
         name: KEY_DERIVATION_ALGO,
-        salt: salt,
+        salt: salt as any,
         iterations: 600000,
         hash: 'SHA-256',
-      },
+      } as any,
       baseKey,
       { name: ENCRYPTION_ALGO, length: 256 },
       false,
@@ -90,9 +89,9 @@ export class StorageService {
       const encodedData = encoder.encode(JSON.stringify(value));
       
       const encryptedContent = await window.crypto.subtle.encrypt(
-        { name: ENCRYPTION_ALGO, iv },
+        { name: ENCRYPTION_ALGO, iv: iv as any } as any,
         this.masterKey,
-        encodedData
+        encodedData as any
       );
 
       dataToStore = {
@@ -126,9 +125,9 @@ export class StorageService {
             const iv = this.hexToUint8Array(result.iv);
             const content = this.hexToUint8Array(result.content);
             const decrypted = await window.crypto.subtle.decrypt(
-              { name: ENCRYPTION_ALGO, iv },
+              { name: ENCRYPTION_ALGO, iv: iv as any } as any,
               this.masterKey,
-              content
+              content as any
             );
             const decoder = new TextDecoder();
             resolve(JSON.parse(decoder.decode(decrypted)));
@@ -159,7 +158,11 @@ export class StorageService {
             try {
               const iv = this.hexToUint8Array(res.iv);
               const content = this.hexToUint8Array(res.content);
-              const decrypted = await window.crypto.subtle.decrypt({ name: ENCRYPTION_ALGO, iv }, this.masterKey, content);
+              const decrypted = await window.crypto.subtle.decrypt(
+                { name: ENCRYPTION_ALGO, iv: iv as any } as any, 
+                this.masterKey, 
+                content as any
+              );
               return JSON.parse(new TextDecoder().decode(decrypted));
             } catch { return null; }
           }

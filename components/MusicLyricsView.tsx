@@ -1,6 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, Search, Music, Loader2, StopCircle, Disc, Info, AlertCircle, Headphones, Check, X, Volume2, Globe, ShieldCheck, Zap, Quote, Waves, Activity, Cpu } from 'lucide-react';
+/* Added Info icon to the lucide-react imports */
+import { Mic, Search, Music, Loader2, StopCircle, Disc, Headphones, Check, X, Volume2, Waves, Activity, Cpu, Info } from 'lucide-react';
 import { ai } from '../services/gemini';
 import { Type } from '@google/genai';
 import ReactMarkdown from 'react-markdown';
@@ -113,7 +113,6 @@ export const MusicLyricsView: React.FC = () => {
       const base64Audio = arrayBufferToBase64(arrayBuffer);
 
       setAnalysisStage('decoding');
-      // Fix: Used 'gemini-3-flash-preview' for extraction task
       const signatureResponse = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: {
@@ -136,7 +135,8 @@ export const MusicLyricsView: React.FC = () => {
         }
       });
 
-      const data = JSON.parse(signatureResponse.text || '{}');
+      const dataText = signatureResponse.text || '{}';
+      const data = JSON.parse(dataText);
       const signature = data.signature || "Unknown Sonic DNA";
       const snippet = data.snippet || "Instrumental profile";
       const query = data.query || "Jamaican song identification";
@@ -144,7 +144,6 @@ export const MusicLyricsView: React.FC = () => {
       setDetectedProfile({ snippet, signature });
       setAnalysisStage('grounding');
 
-      // Note: 'gemini-3-pro-preview' is correct here as it supports googleSearch and complex reasoning
       const groundedResponse = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
         contents: `Pinpoint the EXACT Jamaican track:
@@ -363,15 +362,14 @@ export const MusicLyricsView: React.FC = () => {
                 </div>
              </div>
              <div className="bg-gray-900/20 backdrop-blur-3xl rounded-[3.5rem] p-12 border border-gray-800/40 shadow-2xl relative overflow-hidden group">
-                <Music className="absolute -top-16 -right-16 text-white/5 group-hover:text-green-500/5 transition-colors duration-1000" size={320} />
-                <div className="prose prose-invert prose-headings:text-yellow-400 prose-headings:font-black prose-headings:italic prose-headings:tracking-tighter prose-headings:text-3xl prose-strong:text-green-400 prose-strong:font-black prose-p:text-gray-300 prose-p:leading-relaxed prose-p:text-base max-w-none relative z-10">
+                <div className="prose prose-invert max-w-none relative z-10">
                    <ReactMarkdown>{lyricsResult}</ReactMarkdown>
                 </div>
              </div>
              <div className="flex gap-4">
                 <button onClick={() => { setLyricsResult(null); stopRecording(); }}
                   className="flex-[3] py-8 bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-black rounded-[2.5rem] transition-all shadow-xl active:scale-95 flex items-center justify-center gap-4 uppercase tracking-[0.3em] text-[12px]">
-                  <RefreshCw size={22} strokeWidth={3} /> Scan Next Riddim
+                  Scan Next Riddim
                 </button>
                 <button onClick={() => setLyricsResult(null)}
                   className="flex-1 py-8 bg-gray-900 border border-gray-800 hover:bg-gray-800 text-gray-500 rounded-[2.5rem] transition-all flex items-center justify-center">
@@ -384,5 +382,3 @@ export const MusicLyricsView: React.FC = () => {
     </div>
   );
 };
-
-const RefreshCw = (props: any) => <svg {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>;

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Mic, MicOff, Video, PhoneOff, BarChart2, Loader2, CheckCircle, ArrowLeft, Heart, History, X, Calendar, Volume2, AlertCircle } from 'lucide-react';
+import { Mic, PhoneOff, BarChart2, Video, History, X } from 'lucide-react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { SYSTEM_INSTRUCTION, EMPATHY_INSTRUCTION } from '../constants';
 import { base64ToUint8Array, createPcmBlob, decodeAudioData } from '../utils/audio';
@@ -106,7 +106,6 @@ export const LiveSession: React.FC<LiveSessionProps> = ({ initialContext, canMar
   const analyserRef = useRef<AnalyserNode | null>(null);
   const outputAnalyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const micButtonRef = useRef<HTMLButtonElement>(null);
   const inputBufferRef = useRef('');
   const outputBufferRef = useRef('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -211,9 +210,9 @@ export const LiveSession: React.FC<LiveSessionProps> = ({ initialContext, canMar
                 if (message.serverContent?.inputTranscription) { inputBufferRef.current += message.serverContent.inputTranscription.text; setRealtimeInput(inputBufferRef.current); }
                 if (message.serverContent?.outputTranscription) { outputBufferRef.current += message.serverContent.outputTranscription.text; setRealtimeOutput(outputBufferRef.current); }
                 if (message.serverContent?.turnComplete) {
-                    const newM = [];
-                    if (inputBufferRef.current.trim()) newM.push({ id: Date.now() + 'u', role: 'user', text: inputBufferRef.current.trim(), timestamp: new Date() } as Message);
-                    if (outputBufferRef.current.trim()) newM.push({ id: Date.now() + 'm', role: 'model', text: outputBufferRef.current.trim(), timestamp: new Date() } as Message);
+                    const newM: Message[] = [];
+                    if (inputBufferRef.current.trim()) newM.push({ id: Date.now() + 'u', role: 'user', text: inputBufferRef.current.trim(), timestamp: new Date() });
+                    if (outputBufferRef.current.trim()) newM.push({ id: Date.now() + 'm', role: 'model', text: outputBufferRef.current.trim(), timestamp: new Date() });
                     setMessages(p => [...p, ...newM]); inputBufferRef.current = ''; outputBufferRef.current = ''; setRealtimeInput(''); setRealtimeOutput('');
                 }
             },
@@ -241,7 +240,7 @@ export const LiveSession: React.FC<LiveSessionProps> = ({ initialContext, canMar
               <div className={`w-32 h-32 rounded-full flex items-center justify-center z-10 ${isConnected ? 'bg-green-600' : 'bg-gray-300'}`}>{isConnected ? <BarChart2 className="text-white" /> : <Video />}</div>
           </div>
           <div className="flex items-center gap-6 mb-8">
-              {!isConnected && !isConnecting ? <button onClick={startSession} className="bg-gray-900 text-white px-8 py-3 rounded-full flex items-center gap-2"><Mic size={20} /> Start</button> : 
+              {!isConnected && !isConnecting ? <button onClick={startSession} className="bg-gray-900 text-white px-8 py-3 rounded-full flex items-center gap-2">Start Session</button> : 
                isConnecting ? <button disabled className="bg-gray-200 px-8 py-3 rounded-full">Connecting...</button> : 
                <button onClick={handleHangUp} className="p-4 bg-red-500 text-white rounded-full"><PhoneOff /></button>
               }
